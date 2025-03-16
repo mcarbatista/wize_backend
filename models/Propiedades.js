@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+const ImageSchema = new mongoose.Schema({
+    url: { type: String, required: true },
+    alt: { type: String },
+    description: { type: String },
+    position: { type: Number },
+});
+
 const PropiedadesSchema = new mongoose.Schema({
     Titulo: String,
     Precio: String,
@@ -7,7 +14,7 @@ const PropiedadesSchema = new mongoose.Schema({
     Estado: String,
     Resumen: String,
     Imagen: String,
-    Galeria: Array,
+    Galeria: { type: [ImageSchema], default: [] },
     Descripcion: Object,
     Ciudad: String,
     Barrio: String,
@@ -18,7 +25,7 @@ const PropiedadesSchema = new mongoose.Schema({
     Banos: Number,
     Tamano_m2: String,
     Plano: Array,
-    ID: String,
+    ID: { type: String, default: () => new UUID().toString() },
     Proyecto_ID: String,
     Proyecto_Nombre: String,
     Unidad: String,
@@ -31,4 +38,15 @@ const PropiedadesSchema = new mongoose.Schema({
     Updated_Date: Date
 }, { strict: false });
 
-module.exports = mongoose.model("Propiedades", PropiedadesSchema, "propiedades");
+// Ensure the UUID is used correctly
+PropiedadesSchema.pre("save", function (next) {
+    if (!this._id) {
+        this._id = new UUID().toString();
+    }
+    next();
+});
+
+const Propiedad = mongoose.model("Propiedades", PropiedadesSchema, "propiedades");
+module.exports = Propiedad;
+
+
