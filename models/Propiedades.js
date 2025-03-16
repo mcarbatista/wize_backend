@@ -1,31 +1,34 @@
 const mongoose = require("mongoose");
 
 const PropiedadesSchema = new mongoose.Schema({
-    Title: String,
+    Titulo: String,
     Precio: String,
     Precio_Numerico: Number,
     Estado: String,
     Resumen: String,
-    Image: String,
-    Gallery: Array,
-    Descripción_propiedad: String,
+    Imagen: String,
+    Galeria: Array,
+    Descripcion: Object,
     Ciudad: String,
     Barrio: String,
     Ubicacion: String,
-    Tipo_de_Propiedad: String,
+    Tipo: String,
     Entrega: String,
-    num_Dorm: Number,
-    num_Banos: Number,
+    Dormitorios: Number,
+    Banos: Number,
     Tamano_m2: String,
     Plano: Array,
     ID: String,
-    Propiedades: String,
-    Owner: String,
+    Proyecto_ID: String,
+    Proyecto_Nombre: String,
+    Unidad: String,
     Forma_de_Pago: String,
     Celular: String,
     Email: String,
+    Owner: String,
+    Metraje: String,
     Created_Date: Date,
     Updated_Date: Date
 }, { strict: false });
 
-module.exports = mongoose.model("Propiedades", PropiedadesSchema);
+module.exports = mongoose.model("Propiedades", PropiedadesSchema, "propiedades");

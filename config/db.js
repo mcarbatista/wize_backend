@@ -14,12 +14,16 @@ const connectDB = async () => {
         console.log("🔍 Connecting to MongoDB...");
 
         await mongoose.connect(process.env.MONGO_URI, {
+            dbName: "wize",
             useNewUrlParser: true,
             useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000, // Avoid long buffering errors
+            socketTimeoutMS: 45000, // Allow more time for queries
         });
 
         console.log("✅ MongoDB Connected Successfully");
-        console.log("🔍 Using MONGO_URI:", process.env.MONGO_URI);
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        console.log("📂 Available Collections in Database:", collections.map(col => col.name)); // Debugging
 
     } catch (error) {
         console.error("❌ MongoDB Connection Error:", error.message);

@@ -24,11 +24,13 @@ app.use(cors());
 // Import Routes
 const uploadRoutes = require('./routes/upload');
 const authRoutes = require('./routes/auth');
-const propiedadesRoutes = require('./routes/propiedades'); // NEW: Propiedades Route
+const propiedadesRoutes = require('./routes/propiedades');
+const usuariosRoutes = require('./routes/usuarios');
 
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/propiedades', propiedadesRoutes); // NEW: Propiedades API
+app.use('/api/propiedades', propiedadesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // Root Route
 app.get('/', (req, res) => {

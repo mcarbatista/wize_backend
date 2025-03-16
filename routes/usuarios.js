@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const Propiedades = require("../models/Propiedades");
+const Usuarios = require("../models/Usuarios");
 
-// GET all propiedades
+// GET all usuarios
 router.get("/", async (req, res) => {
     try {
-        const propiedades = await Propiedades.find({});
-        res.json(propiedades);
+        const usuarios = await Usuarios.find({});
+        res.json(usuarios);
     } catch (error) {
-        console.error("❌ Error fetching propiedades:", error);
+        console.error("❌ Error fetching usuarios:", error);
         res.status(500).json({ error: error.message || "Server error" });
     }
 });
