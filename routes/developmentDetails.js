@@ -5,7 +5,7 @@ const Desarrollos = require("../models/Desarrollos");
 // GET un Desarrollo
 router.get("/api/desarrollos/:id", async (req, res) => {
     try {
-        const desarrollo = await Desarrollo.findById(req.params.id);
+        const desarrollo = await Desarrollos.findById(req.params.id);
         if (!desarrollo) return res.status(404).json({ message: "Desarrollo no encontrado" });
         res.json(desarrollo);
     } catch (error) {
