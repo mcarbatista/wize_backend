@@ -25,7 +25,6 @@ const PropiedadesSchema = new mongoose.Schema({
     Banos: Number,
     Tamano_m2: String,
     Plano: Array,
-    ID: { type: String, default: () => new UUID().toString() },
     Proyecto_ID: String,
     Proyecto_Nombre: String,
     Unidad: String,
