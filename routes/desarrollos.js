@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Desarrollos = require("../models/Desarrollos");
+const Propiedad = require("../models/Propiedad");
 
 // GET all desarrollos
 router.get("/", async (req, res) => {
@@ -12,5 +13,17 @@ router.get("/", async (req, res) => {
         res.status(500).json({ error: error.message || "Server error" });
     }
 });
+
+router.get("/:id/propiedades", async (req, res) => {
+    try {
+        const propiedades = await Propiedad.find({ desarrollo: req.params.id });
+        res.json(propiedades);
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener propiedades." });
+    }
+});
+
+
+
 
 module.exports = router;

@@ -8,6 +8,7 @@ const ImageSchema = new mongoose.Schema({
 });
 
 const DesarrollosSchema = new mongoose.Schema({
+    _id: ObjectId("..."),
     Proyecto_Nombre: String,
     Precio: String,
     Precio_Numerico: Number,
@@ -24,7 +25,6 @@ const DesarrollosSchema = new mongoose.Schema({
     Dormitorios: Number,
     Pisos: String,
     Gastos_Ocupacion: String,
-    Proyecto_ID: { type: String, default: () => new UUID().toString() },
     Forma_de_Pago: String,
     Celular: String,
     Email: String,
@@ -41,7 +41,6 @@ DesarrollosSchema.pre("save", function (next) {
     next();
 });
 
-const Desarrollo = mongoose.model("Desarrollos", DesarrollosSchema, "desarrollos");
-module.exports = Desarrollo;
+module.exports = mongoose.model('Desarrollo', DesarrolloSchema);
 
 

@@ -8,6 +8,7 @@ const ImageSchema = new mongoose.Schema({
 });
 
 const PropiedadesSchema = new mongoose.Schema({
+    _id: ObjectId("..."),
     Titulo: String,
     Precio: String,
     Precio_Numerico: Number,
@@ -24,8 +25,8 @@ const PropiedadesSchema = new mongoose.Schema({
     Dormitorios: Number,
     Banos: Number,
     Tamano_m2: String,
-    Plano: Array,
-    Proyecto_ID: String,
+    Plano: { type: [ImageSchema], default: [] },
+    DesarrolloId: { type: mongoose.Schema.Types.ObjectId, ref: 'Desarrollo' },
     Proyecto_Nombre: String,
     Unidad: String,
     Forma_de_Pago: String,
@@ -45,7 +46,6 @@ PropiedadesSchema.pre("save", function (next) {
     next();
 });
 
-const Propiedad = mongoose.model("Propiedades", PropiedadesSchema, "propiedades");
-module.exports = Propiedad;
+module.exports = mongoose.model('Propiedad', PropiedadSchema);
 
 
