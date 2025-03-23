@@ -21,12 +21,12 @@ const connectDB = async () => {
             socketTimeoutMS: 45000, // Allow more time for queries
         });
 
-        console.log("✅ MongoDB Connected Successfully");
+        console.log("✅ MongoDB conectado");
         const collections = await mongoose.connection.db.listCollections().toArray();
         console.log("📂 Available Collections in Database:", collections.map(col => col.name)); // Debugging
 
     } catch (error) {
-        console.error("❌ MongoDB Connection Error:", error.message);
+        console.error("❌ Error al conectar a MongoDB:", error.message);
         process.exit(1); // Exit process with failure
     }
 };
