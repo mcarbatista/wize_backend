@@ -42,6 +42,6 @@ DesarrollosSchema.pre("save", function (next) {
     next();
 });
 
-module.exports = mongoose.model('Desarrollo', DesarrolloSchema);
+module.exports = mongoose.model('Desarrollo', DesarrollosSchema);
 
 
