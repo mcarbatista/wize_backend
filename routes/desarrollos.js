@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const Desarrollos = require("../models/Desarrollos");
 const mongoose = require("mongoose");
+const Desarrollos = require("../models/Desarrollos");
+const Propiedades = require("../models/Propiedades");
 
 // GET all desarrollos
 router.get("/", async (req, res) => {
@@ -17,7 +18,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
-    // Verificamos si el ID es válido (evita crash si no es ObjectId)
+    // Verificación básica del ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: "ID inválido" });
     }
@@ -27,12 +28,18 @@ router.get("/:id", async (req, res) => {
         if (!desarrollo) {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
-        res.json(desarrollo);
+
+        // Buscar propiedades relacionadas a este desarrollo
+        const propiedades = await Propiedades.find({ desarrolloId: id });
+
+        // Devolver todo junto
+        res.json({ desarrollo, propiedades });
     } catch (err) {
-        console.error("❌ Error al obtener desarrollo:", err);
+        console.error("❌ Error al obtener desarrollo y propiedades:", err);
         res.status(500).json({ error: "Error interno del servidor" });
     }
 });
+
 
 
 
