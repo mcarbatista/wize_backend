@@ -1,25 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const { upload } = require('../config/cloudinary');
 const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const streamifier = require("streamifier");
 
+// ✅ Cloudinary config
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Upload images (array)
-router.post('/upload', upload.array('files', 10), (req, res) => {
+// ✅ Multer setup for memory upload
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// ✅ Upload images to Cloudinary and return structured info for Galeria
+router.post('/upload', upload.array('imagenes', 10), async (req, res) => {
     try {
-        const fileUrls = req.files.map(file => file.path);
-        res.json({ success: true, urls: fileUrls });
+        const uploads = await Promise.all(
+            req.files.map((file, index) => {
+                return new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: "desarrollos" },
+                        (error, result) => {
+                            if (result) {
+                                resolve({
+                                    url: result.secure_url,
+                                    alt: file.originalname || "",
+                                    description: "",
+                                    position: index
+                                });
+                            } else {
+                                reject(error);
+                            }
+                        }
+                    );
+                    streamifier.createReadStream(file.buffer).pipe(stream);
+                });
+            })
+        );
+
+        res.json({ success: true, galeria: uploads });
     } catch (error) {
-        res.status(500).json({ error: 'Upload failed' });
+        console.error("❌ Error al subir imágenes:", error);
+        res.status(500).json({ success: false, error: 'Upload failed', details: error.message });
     }
 });
 
-// ✅ Delete image
+// ✅ Delete image by Cloudinary public_id
 router.delete('/', async (req, res) => {
     const { public_id } = req.query;
 
@@ -31,6 +60,7 @@ router.delete('/', async (req, res) => {
         const result = await cloudinary.uploader.destroy(public_id);
         res.json({ result });
     } catch (error) {
+        console.error("❌ Error al borrar imagen:", error);
         res.status(500).json({ error: "Failed to delete image", details: error.message });
     }
 });

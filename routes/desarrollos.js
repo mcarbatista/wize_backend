@@ -94,4 +94,59 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
+// ✅ POST imagen de desarrollo
+router.post("/:id/imagenes", upload.array("imagenes"), async (req, res) => {
+    try {
+        const desarrollo = await Desarrollos.findById(req.params.id);
+        if (!desarrollo) return res.status(404).json({ error: "Desarrollo no encontrado" });
+
+        const uploads = await Promise.all(
+            req.files.map((file, index) => {
+                return new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: "desarrollos" },
+                        (error, result) => {
+                            if (result) {
+                                resolve({
+                                    url: result.secure_url,
+                                    position: desarrollo.Galeria.length + index
+                                });
+                            } else {
+                                reject(error);
+                            }
+                        }
+                    );
+                    streamifier.createReadStream(file.buffer).pipe(stream);
+                });
+            })
+        );
+
+        desarrollo.Galeria.push(...uploads);
+        await desarrollo.save();
+
+        res.json({ success: true, galeria: desarrollo.Galeria });
+    } catch (error) {
+        console.error("❌ Error subiendo imágenes:", error);
+        res.status(500).json({ error: "Error al subir imágenes" });
+    }
+});
+
+// ✅ PUT imagen principal de desarrollo
+router.put("/:id/imagen-principal", async (req, res) => {
+    const { url } = req.body;
+
+    try {
+        const desarrollo = await Desarrollos.findById(req.params.id);
+        if (!desarrollo) return res.status(404).json({ error: "Desarrollo no encontrado" });
+
+        desarrollo.Imagen = url;
+        await desarrollo.save();
+        res.json({ success: true, imagen: desarrollo.Imagen });
+    } catch (err) {
+        console.error("❌ Error al setear imagen principal:", err);
+        res.status(500).json({ error: "No se pudo actualizar imagen principal" });
+    }
+});
+
+
 module.exports = router;
