@@ -51,6 +51,8 @@ router.post("/upload", upload.array("imagenes"), async (req, res) => {
 
 // ✅ Create property
 router.post("/", async (req, res) => {
+    console.log("📥 Payload recibido en backend:", req.body);
+
     try {
         console.log("📥 Payload recibido en POST /api/propiedades:");
         console.log(JSON.stringify(req.body, null, 2));
