@@ -4,7 +4,12 @@ const mongoose = require("mongoose");
 const Desarrollos = require("../models/Desarrollos");
 const Propiedades = require("../models/Propiedades");
 
-// GET all desarrollos
+// ✅ Ruta de prueba
+router.get("/test", (req, res) => {
+    res.send("✅ Ruta de desarrollos funciona");
+});
+
+// ✅ GET all desarrollos
 router.get("/", async (req, res) => {
     try {
         const desarrollos = await Desarrollos.find({});
@@ -15,10 +20,10 @@ router.get("/", async (req, res) => {
     }
 });
 
+// ✅ GET desarrollo por ID + propiedades asociadas
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
-    // Verificación básica del ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: "ID inválido" });
     }
@@ -29,18 +34,64 @@ router.get("/:id", async (req, res) => {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
-        // Buscar propiedades relacionadas a este desarrollo
-        const propiedades = await Propiedades.find({ desarrolloId: id });
-
-        // Devolver todo junto
+        const propiedades = await Propiedades.find({ DesarrolloId: id });
         res.json({ desarrollo, propiedades });
     } catch (err) {
-        console.error("❌ Error al obtener desarrollo y propiedades:", err);
+        console.error("❌ Error al obtener desarrollo:", err);
         res.status(500).json({ error: "Error interno del servidor" });
     }
 });
 
+// ✅ POST crear nuevo desarrollo
+router.post("/", async (req, res) => {
+    try {
+        const nuevoDesarrollo = new Desarrollos(req.body);
+        await nuevoDesarrollo.save();
+        res.status(201).json(nuevoDesarrollo);
+    } catch (err) {
+        console.error("❌ Error al crear desarrollo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
+// ✅ PUT actualizar desarrollo existente
+router.put("/:id", async (req, res) => {
+    const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    try {
+        const actualizado = await Desarrollos.findByIdAndUpdate(id, req.body, { new: true });
+        if (!actualizado) {
+            return res.status(404).json({ error: "Desarrollo no encontrado" });
+        }
+        res.json(actualizado);
+    } catch (err) {
+        console.error("❌ Error al actualizar desarrollo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ✅ DELETE eliminar desarrollo
+router.delete("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "ID inválido" });
+    }
+
+    try {
+        const eliminado = await Desarrollos.findByIdAndDelete(id);
+        if (!eliminado) {
+            return res.status(404).json({ error: "Desarrollo no encontrado" });
+        }
+        res.json({ message: "Desarrollo eliminado correctamente" });
+    } catch (err) {
+        console.error("❌ Error al eliminar desarrollo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = router;

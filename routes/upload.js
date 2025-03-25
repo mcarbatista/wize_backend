@@ -9,8 +9,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
-// upload an image
+// ✅ Upload images (array)
 router.post('/upload', upload.array('files', 10), (req, res) => {
     try {
         const fileUrls = req.files.map(file => file.path);
@@ -20,7 +19,7 @@ router.post('/upload', upload.array('files', 10), (req, res) => {
     }
 });
 
-// delete an image
+// ✅ Delete image
 router.delete('/', async (req, res) => {
     const { public_id } = req.query;
 
@@ -35,4 +34,5 @@ router.delete('/', async (req, res) => {
         res.status(500).json({ error: "Failed to delete image", details: error.message });
     }
 });
+
 module.exports = router;

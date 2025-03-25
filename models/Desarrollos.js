@@ -8,14 +8,13 @@ const ImageSchema = new mongoose.Schema({
 });
 
 const DesarrollosSchema = new mongoose.Schema({
-    _id: ObjectId("..."),
     Proyecto_Nombre: String,
     Precio: Number,
     Precio_Con_Formato: String,
     Estado: String,
     Resumen: String,
-    Descripcion: Object,
-    Descripcion_Expandir: Object,
+    Descripcion: String,
+    Descripcion_Expandir: String,
     Imagen: String,
     Galeria: { type: [ImageSchema], default: [] },
     Ciudad: String,
@@ -32,16 +31,6 @@ const DesarrollosSchema = new mongoose.Schema({
     Email: String,
     Created_Date: Date,
     Updated_Date: Date
-}, { strict: false });
+}, { timestamps: true });
 
-// Ensure the UUID is used correctly
-DesarrollosSchema.pre("save", function (next) {
-    if (!this._id) {
-        this._id = new UUID().toString();
-    }
-    next();
-});
-
-module.exports = mongoose.model('Desarrollo', DesarrollosSchema);
-
-
+module.exports = mongoose.model("Desarrollo", DesarrollosSchema);
