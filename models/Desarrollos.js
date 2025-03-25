@@ -31,6 +31,6 @@ const DesarrollosSchema = new mongoose.Schema({
     Email: String,
     Created_Date: Date,
     Updated_Date: Date
-}, { timestamps: true });
+}, { timestamps: true, collection: "desarrollos" });
 
 module.exports = mongoose.model("Desarrollo", DesarrollosSchema);

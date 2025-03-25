@@ -38,6 +38,6 @@ const PropiedadesSchema = new mongoose.Schema({
     Ubicacion: String,
     Resumen: { type: String, required: true },
     Descripcion: String
-}, { timestamps: true });
+}, { timestamps: true, collection: "propiedades" });
 
 module.exports = mongoose.model("Propiedad", PropiedadesSchema);
