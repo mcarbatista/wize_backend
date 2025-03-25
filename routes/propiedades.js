@@ -52,6 +52,9 @@ router.post("/upload", upload.array("imagenes"), async (req, res) => {
 // ✅ Create property
 router.post("/", async (req, res) => {
     try {
+        console.log("📥 Payload recibido en POST /api/propiedades:");
+        console.log(JSON.stringify(req.body, null, 2));
+
         const {
             Titulo,
             Precio,
@@ -64,6 +67,7 @@ router.post("/", async (req, res) => {
 
         // Validaciones básicas
         if (!Titulo || !Precio || !Dormitorios || !Banos || !Tamano_m2 || !DesarrolloId) {
+            console.warn("⚠️ Faltan campos requeridos en el body");
             return res.status(400).json({
                 error: "Faltan campos requeridos: Título, Precio, Dormitorios, Baños, Tamaño m2 o Desarrollo"
             });
@@ -72,13 +76,16 @@ router.post("/", async (req, res) => {
         // Verificamos que precio y tamaño sean números válidos
         const precioNum = Number(Precio);
         const tamanoNum = Number(Tamano_m2);
+
         if (isNaN(precioNum) || isNaN(tamanoNum)) {
+            console.warn("⚠️ Precio o Tamaño no son números válidos");
             return res.status(400).json({ error: "Precio y Tamaño m2 deben ser números válidos" });
         }
 
         // Buscar el desarrollo
         const desarrollo = await Desarrollos.findById(DesarrolloId);
         if (!desarrollo) {
+            console.warn("⚠️ Desarrollo no encontrado con ID:", DesarrolloId);
             return res.status(404).json({ error: "Desarrollo no encontrado con ese ID" });
         }
 
@@ -91,6 +98,10 @@ router.post("/", async (req, res) => {
         req.body.Ciudad = desarrollo.Ciudad;
         req.body.Barrio = desarrollo.Barrio;
         req.body.Ubicacion = desarrollo.Ubicacion;
+        req.body.Estado = desarrollo.Estado;
+        req.body.Entrega = desarrollo.Entrega;
+        req.body.Forma_de_Pago = desarrollo.Forma_de_Pago;
+        req.body.Gastos_Ocupacion = desarrollo.Gastos_Ocupacion;
 
         // Guardar valores numéricos y formateados
         req.body.Precio = precioNum;
@@ -105,6 +116,7 @@ router.post("/", async (req, res) => {
         res.status(500).json({ error: err.message || "Error al crear propiedad" });
     }
 });
+
 
 
 
