@@ -15,6 +15,7 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+
 // ✅ Upload images to Cloudinary and return structured info for Galeria
 router.post('/', upload.array('imagenes', 10), async (req, res) => {
     try {
