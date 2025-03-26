@@ -3,7 +3,7 @@ const router = express.Router();
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const streamifier = require("streamifier");
-const Desarrollo = require("../models/Desarrollos");
+const Desarrollos = require("../models/Desarrollos");
 
 // ✅ Multer setup
 const storage = multer.memoryStorage();
