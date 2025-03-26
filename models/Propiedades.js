@@ -37,7 +37,8 @@ const PropiedadesSchema = new mongoose.Schema({
     Barrio: { type: String, required: true },
     Ubicacion: String,
     Resumen: { type: String, required: true },
-    Descripcion: String
+    Descripcion: String,
+    Descripcion_Expandir: String
 }, { timestamps: true, collection: "propiedades" });
 
 module.exports = mongoose.model("Propiedad", PropiedadesSchema);

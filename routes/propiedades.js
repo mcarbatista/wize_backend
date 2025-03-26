@@ -3,100 +3,66 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Propiedad = require("../models/Propiedades");
 const Desarrollos = require("../models/Desarrollos");
-const cloudinary = require("cloudinary").v2;
-const multer = require("multer");
-const streamifier = require("streamifier");
 
-// ✅ Cloudinary config
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// ✅ Multer setup
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// ✅ Ruta: subir múltiples imágenes a Cloudinary
-router.post("/upload", upload.array("imagenes"), async (req, res) => {
+// ✅ GET todas las propiedades con info de desarrollo
+router.get("/", async (req, res) => {
     try {
-        const uploads = await Promise.all(
-            req.files.map((file) => {
-                return new Promise((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        { folder: "propiedades" },
-                        (error, result) => {
-                            if (result) {
-                                resolve({
-                                    url: result.secure_url,
-                                    public_id: result.public_id,
-                                });
-                            } else {
-                                reject(error);
-                            }
-                        }
-                    );
-                    streamifier.createReadStream(file.buffer).pipe(stream);
-                });
-            })
-        );
-
-        res.json({ success: true, images: uploads });
+        const propiedades = await Propiedad.find().populate("DesarrolloId");
+        res.json(propiedades);
     } catch (error) {
-        console.error("❌ Upload error:", error);
-        res.status(500).json({ success: false, error: "Image upload failed" });
+        console.error("❌ Error al obtener propiedades:", error);
+        res.status(500).json({ error: "Error al obtener propiedades" });
     }
 });
 
-// ✅ Create property
-router.post("/", async (req, res) => {
-    console.log("📥 Payload recibido en backend:", req.body);
-
+// ✅ GET una propiedad por ID
+router.get("/:id", async (req, res) => {
     try {
-        console.log("📥 Payload recibido en POST /api/propiedades:");
-        console.log(JSON.stringify(req.body, null, 2));
+        const prop = await Propiedad.findById(req.params.id).populate("DesarrolloId");
+        if (!prop) return res.status(404).json({ error: "Propiedad no encontrada" });
+        res.json(prop);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
+// ✅ GET propiedades de un desarrollo
+router.get("/desarrollos/:id", async (req, res) => {
+    try {
+        const props = await Propiedad.find({ DesarrolloId: req.params.id });
+        res.json(props);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ✅ POST: crear nueva propiedad
+router.post("/", async (req, res) => {
+    try {
         const {
-            Titulo,
-            Precio,
-            Estado,
-            Dormitorios,
-            Banos,
-            Tamano_m2,
-            DesarrolloId
+            Titulo, Precio, Dormitorios, Banos, Tamano_m2, DesarrolloId, Galeria
         } = req.body;
 
-        // Validaciones básicas
         if (!Titulo || !Precio || !Dormitorios || !Banos || !Tamano_m2 || !DesarrolloId) {
-            console.warn("⚠️ Faltan campos requeridos en el body");
-            return res.status(400).json({
-                error: "Faltan campos requeridos: Título, Precio, Dormitorios, Baños, Tamaño m2 o Desarrollo"
-            });
+            return res.status(400).json({ error: "Faltan campos requeridos" });
         }
 
-        // Verificamos que precio y tamaño sean números válidos
         const precioNum = Number(Precio);
         const tamanoNum = Number(Tamano_m2);
 
         if (isNaN(precioNum) || isNaN(tamanoNum)) {
-            console.warn("⚠️ Precio o Tamaño no son números válidos");
-            return res.status(400).json({ error: "Precio y Tamaño m2 deben ser números válidos" });
+            return res.status(400).json({ error: "Precio y Tamaño deben ser números válidos" });
         }
 
-        // Buscar el desarrollo
         const desarrollo = await Desarrollos.findById(DesarrolloId);
         if (!desarrollo) {
-            console.warn("⚠️ Desarrollo no encontrado con ID:", DesarrolloId);
-            return res.status(404).json({ error: "Desarrollo no encontrado con ese ID" });
+            return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
-        // Formatear precio con separador de miles
-        const precioConFormato = precioNum.toLocaleString("es-ES");
-
-        // Precopiar campos desde el desarrollo
+        // Copiar campos desde desarrollo si están vacíos
         req.body.Resumen = desarrollo.Resumen;
         req.body.Descripcion = desarrollo.Descripcion;
+        req.body.Descripcion_Expandir = desarrollo.Descripcion_Expandir;
         req.body.Ciudad = desarrollo.Ciudad;
         req.body.Barrio = desarrollo.Barrio;
         req.body.Ubicacion = desarrollo.Ubicacion;
@@ -105,110 +71,91 @@ router.post("/", async (req, res) => {
         req.body.Forma_de_Pago = desarrollo.Forma_de_Pago;
         req.body.Gastos_Ocupacion = desarrollo.Gastos_Ocupacion;
 
-        // Guardar valores numéricos y formateados
         req.body.Precio = precioNum;
         req.body.Tamano_m2 = tamanoNum;
-        req.body.Precio_Con_Formato = precioConFormato;
+        req.body.Precio_Con_Formato = precioNum.toLocaleString("es-ES");
 
-        const newProp = new Propiedad(req.body);
-        await newProp.save();
-        res.status(201).json(newProp);
+        // Validar que galería tenga solo campos válidos
+        if (Galeria && Galeria.length > 0) {
+            req.body.Galeria = Galeria.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
+
+        const nuevaPropiedad = new Propiedad(req.body);
+        await nuevaPropiedad.save();
+
+        res.status(201).json(nuevaPropiedad);
     } catch (err) {
         console.error("❌ Error al crear propiedad:", err);
         res.status(500).json({ error: err.message || "Error al crear propiedad" });
     }
 });
 
-
-
-
-// ✅ Get all properties with desarrollo info
-router.get("/", async (req, res) => {
-    try {
-        const propiedades = await Propiedad.find().populate("DesarrolloId");
-        res.json(propiedades);
-    } catch (error) {
-        console.error("❌ Error fetching propiedades:", error);
-        res.status(500).json({ error: error.message || "Server error" });
-    }
-});
-
-// ✅ Get one property
-router.get("/:id", async (req, res) => {
-    try {
-        const prop = await Propiedad.findById(req.params.id).populate("DesarrolloId");
-        if (!prop) return res.status(404).json({ error: "Not found" });
-        res.json(prop);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ✅ Update property
+// ✅ PUT: actualizar propiedad existente
 router.put("/:id", async (req, res) => {
     try {
         const {
             Precio,
             Tamano_m2,
             DesarrolloId,
+            Galeria
         } = req.body;
 
-        // Validación de números
         const precioNum = Number(Precio);
         const tamanoNum = Number(Tamano_m2);
+
         if (isNaN(precioNum) || isNaN(tamanoNum)) {
-            return res.status(400).json({ error: "Precio y Tamaño m2 deben ser números válidos" });
+            return res.status(400).json({ error: "Precio y Tamaño deben ser números válidos" });
         }
 
-        // Si hay desarrollo, traer sus datos
         if (DesarrolloId) {
             const desarrollo = await Desarrollos.findById(DesarrolloId);
             if (!desarrollo) {
-                return res.status(404).json({ error: "Desarrollo no encontrado con ese ID" });
+                return res.status(404).json({ error: "Desarrollo no encontrado" });
             }
 
             req.body.Resumen = desarrollo.Resumen;
             req.body.Descripcion = desarrollo.Descripcion;
+            req.body.Descripcion_Expandir = desarrollo.Descripcion_Expandir;
             req.body.Ciudad = desarrollo.Ciudad;
             req.body.Barrio = desarrollo.Barrio;
             req.body.Ubicacion = desarrollo.Ubicacion;
         }
 
-        // Actualizar numéricos y formateo
         req.body.Precio = precioNum;
         req.body.Tamano_m2 = tamanoNum;
         req.body.Precio_Con_Formato = precioNum.toLocaleString("es-ES");
 
-        const updated = await Propiedad.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-        });
+        // Validar galería
+        if (Galeria && Galeria.length > 0) {
+            req.body.Galeria = Galeria.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
 
+        const updated = await Propiedad.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updated) return res.status(404).json({ error: "Propiedad no encontrada" });
 
         res.json(updated);
     } catch (err) {
-        console.error("❌ Error al editar propiedad:", err);
-        res.status(500).json({ error: err.message || "Error al actualizar propiedad" });
-    }
-});
-
-
-// ✅ Delete property
-router.delete("/:id", async (req, res) => {
-    try {
-        const deleted = await Propiedad.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ error: "Not found" });
-        res.json({ message: "Deleted" });
-    } catch (err) {
+        console.error("❌ Error al actualizar propiedad:", err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ✅ Get propiedades by desarrollo ID
-router.get("/desarrollos/:id", async (req, res) => {
+// ✅ DELETE
+router.delete("/:id", async (req, res) => {
     try {
-        const props = await Propiedad.find({ DesarrolloId: req.params.id });
-        res.json(props);
+        const deleted = await Propiedad.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: "Propiedad no encontrada" });
+        res.json({ message: "Propiedad eliminada correctamente" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
