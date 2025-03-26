@@ -55,14 +55,92 @@ router.get("/:id", async (req, res) => {
 });
 
 // ✅ POST crear nuevo desarrollo
-router.post("/", async (req, res) => {
+// ✅ POST: Crear desarrollo con imágenes
+router.post("/", upload.array("imagenes"), async (req, res) => {
     try {
-        const nuevoDesarrollo = new Desarrollos(req.body);
-        await nuevoDesarrollo.save();
-        res.status(201).json(nuevoDesarrollo);
+        const {
+            Proyecto_Nombre,
+            Precio,
+            Estado,
+            Resumen,
+            Descripcion,
+            Ciudad,
+            Barrio,
+            Ubicacion,
+            Email,
+            Celular,
+            Entrega,
+            Forma_de_Pago,
+            Gastos_Ocupacion,
+            Tipo,
+            Imagen_Principal_Url,
+        } = req.body;
+
+        // Validaciones básicas
+        if (
+            !Proyecto_Nombre ||
+            !Precio ||
+            !Estado ||
+            !Resumen ||
+            !Descripcion ||
+            !Ciudad ||
+            !Barrio ||
+            !Ubicacion
+        ) {
+            return res.status(400).json({ error: "Faltan campos obligatorios" });
+        }
+
+        // Subir imágenes a Cloudinary
+        const imagenesSubidas = await Promise.all(
+            req.files.map((file, index) => {
+                return new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "desarrollos",
+                        },
+                        (error, result) => {
+                            if (error) return reject(error);
+                            resolve({
+                                url: result.secure_url,
+                                position: index,
+                                alt: file.originalname,
+                            });
+                        }
+                    );
+                    streamifier.createReadStream(file.buffer).pipe(stream);
+                });
+            })
+        );
+
+        const imagenPrincipal =
+            Imagen_Principal_Url ||
+            (imagenesSubidas.length > 0 ? imagenesSubidas[0].url : null);
+
+        // Crear nuevo desarrollo
+        const nuevoDesarrollo = new Desarrollo({
+            Proyecto_Nombre,
+            Precio,
+            Estado,
+            Resumen,
+            Descripcion,
+            Ciudad,
+            Barrio,
+            Ubicacion,
+            Email,
+            Celular,
+            Entrega,
+            Forma_de_Pago,
+            Gastos_Ocupacion,
+            Tipo,
+            Galeria: imagenesSubidas,
+            Imagen: imagenPrincipal,
+        });
+
+        const saved = await nuevoDesarrollo.save();
+        res.status(201).json(saved);
     } catch (err) {
         console.error("❌ Error al crear desarrollo:", err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: "Error al crear desarrollo" });
     }
 });
 
@@ -107,41 +185,41 @@ router.delete("/:id", async (req, res) => {
 });
 
 // ✅ POST imagen de desarrollo
-router.post("/:id/imagenes", upload.array("imagenes"), async (req, res) => {
-    try {
-        const desarrollo = await Desarrollos.findById(req.params.id);
-        if (!desarrollo) return res.status(404).json({ error: "Desarrollo no encontrado" });
+// router.post("/:id/imagenes", upload.array("imagenes"), async (req, res) => {
+//     try {
+//         const desarrollo = await Desarrollos.findById(req.params.id);
+//         if (!desarrollo) return res.status(404).json({ error: "Desarrollo no encontrado" });
 
-        const uploads = await Promise.all(
-            req.files.map((file, index) => {
-                return new Promise((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        { folder: "desarrollos" },
-                        (error, result) => {
-                            if (result) {
-                                resolve({
-                                    url: result.secure_url,
-                                    position: desarrollo.Galeria.length + index
-                                });
-                            } else {
-                                reject(error);
-                            }
-                        }
-                    );
-                    streamifier.createReadStream(file.buffer).pipe(stream);
-                });
-            })
-        );
+//         const uploads = await Promise.all(
+//             req.files.map((file, index) => {
+//                 return new Promise((resolve, reject) => {
+//                     const stream = cloudinary.uploader.upload_stream(
+//                         { folder: "desarrollos" },
+//                         (error, result) => {
+//                             if (result) {
+//                                 resolve({
+//                                     url: result.secure_url,
+//                                     position: desarrollo.Galeria.length + index
+//                                 });
+//                             } else {
+//                                 reject(error);
+//                             }
+//                         }
+//                     );
+//                     streamifier.createReadStream(file.buffer).pipe(stream);
+//                 });
+//             })
+//         );
 
-        desarrollo.Galeria.push(...uploads);
-        await desarrollo.save();
+//         desarrollo.Galeria.push(...uploads);
+//         await desarrollo.save();
 
-        res.json({ success: true, galeria: desarrollo.Galeria });
-    } catch (error) {
-        console.error("❌ Error subiendo imágenes:", error);
-        res.status(500).json({ error: "Error al subir imágenes" });
-    }
-});
+//         res.json({ success: true, galeria: desarrollo.Galeria });
+//     } catch (error) {
+//         console.error("❌ Error subiendo imágenes:", error);
+//         res.status(500).json({ error: "Error al subir imágenes" });
+//     }
+// });
 
 // ✅ PUT imagen principal de desarrollo
 router.put("/:id/imagen-principal", async (req, res) => {
