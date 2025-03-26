@@ -16,7 +16,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // ✅ Upload images to Cloudinary and return structured info for Galeria
-router.post('/', upload.array('imagenes', 10), async (req, res) => {
+router.post('/', upload.array('imagenes', 20), async (req, res) => {
     try {
         const folderName = req.body.folderName || "generico";
         const cloudinaryFolder = `wize/desarrollos/fotos/${folderName}`;
