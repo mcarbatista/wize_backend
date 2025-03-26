@@ -15,17 +15,20 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-
 // ✅ Upload images to Cloudinary and return structured info for Galeria
 router.post('/', upload.array('imagenes', 10), async (req, res) => {
     try {
+        const folderName = req.body.folderName || "generico";
+        const cloudinaryFolder = `wize/desarrollos/fotos/${folderName}`;
+
         console.log("🛬 Archivos recibidos:", req.files);
+        console.log("📁 Carpeta destino:", cloudinaryFolder);
 
         const uploads = await Promise.all(
             req.files.map((file, index) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
-                        { folder: "desarrollos" },
+                        { folder: cloudinaryFolder },
                         (error, result) => {
                             if (error) {
                                 console.error("❌ Cloudinary error:", error);
