@@ -19,7 +19,9 @@ const upload = multer({ storage });
 router.post('/', upload.array('imagenes', 20), async (req, res) => {
     try {
         const folderName = req.body.folderName || "generico";
-        const cloudinaryFolder = `wize/desarrollos/fotos/${folderName}`;
+
+        // ✅ Flexible: permitir carpeta personalizada desde el frontend
+        const cloudinaryFolder = req.body.folder || `wize/desarrollos/fotos/${folderName}`;
 
         console.log("🛬 Archivos recibidos:", req.files);
         console.log("📁 Carpeta destino:", cloudinaryFolder);
@@ -54,6 +56,7 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
         res.status(500).json({ success: false, error: 'Upload failed', details: error.message });
     }
 });
+
 
 // ✅ Delete image by Cloudinary public_id
 router.delete('/', async (req, res) => {
