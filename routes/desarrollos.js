@@ -1,8 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-const Desarrollos = require("../models/Desarrollos");
-const Propiedades = require("../models/Propiedades");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const streamifier = require("streamifier");
+const Desarrollo = require("../models/Desarrollos");
+
+// ✅ Multer setup
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// ✅ Cloudinary config (si no está centralizado)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ✅ Ruta de prueba
 router.get("/test", (req, res) => {
