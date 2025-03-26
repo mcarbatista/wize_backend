@@ -19,21 +19,24 @@ const upload = multer({ storage });
 // ✅ Upload images to Cloudinary and return structured info for Galeria
 router.post('/', upload.array('imagenes', 10), async (req, res) => {
     try {
+        console.log("🛬 Archivos recibidos:", req.files);
+
         const uploads = await Promise.all(
             req.files.map((file, index) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
                         { folder: "desarrollos" },
                         (error, result) => {
-                            if (result) {
+                            if (error) {
+                                console.error("❌ Cloudinary error:", error);
+                                reject(error);
+                            } else {
                                 resolve({
                                     url: result.secure_url,
                                     alt: file.originalname || "",
                                     description: "",
                                     position: index
                                 });
-                            } else {
-                                reject(error);
                             }
                         }
                     );
