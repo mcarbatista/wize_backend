@@ -34,14 +34,10 @@ router.get("/", async (req, res) => {
 
 // ✅ GET desarrollo por ID + propiedades asociadas
 router.get("/:id", async (req, res) => {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "ID inválido" });
-    }
 
     try {
-        const desarrollo = await Desarrollos.findById(id);
+        console.error("Estoy buscado el desarrollo");
+        const desarrollo = await Desarrollos.findById(req.params.id).populate("DesarrolloId");
         if (!desarrollo) {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }

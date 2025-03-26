@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
@@ -40,7 +41,7 @@ router.get("/desarrollos/:id", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const {
-            Titulo, Precio, Dormitorios, Banos, Tamano_m2, DesarrolloId, Galeria
+            Titulo, Precio, Dormitorios, Banos, Tamano_m2, DesarrolloId, Galeria, Plano
         } = req.body;
 
         if (!Titulo || !Precio || !Dormitorios || !Banos || !Tamano_m2 || !DesarrolloId) {
@@ -59,10 +60,8 @@ router.post("/", async (req, res) => {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
-        // Copiar campos desde desarrollo si están vacíos
         req.body.Resumen = desarrollo.Resumen;
         req.body.Descripcion = desarrollo.Descripcion;
-        req.body.Descripcion_Expandir = desarrollo.Descripcion_Expandir;
         req.body.Ciudad = desarrollo.Ciudad;
         req.body.Barrio = desarrollo.Barrio;
         req.body.Ubicacion = desarrollo.Ubicacion;
@@ -75,9 +74,17 @@ router.post("/", async (req, res) => {
         req.body.Tamano_m2 = tamanoNum;
         req.body.Precio_Con_Formato = precioNum.toLocaleString("es-ES");
 
-        // Validar que galería tenga solo campos válidos
         if (Galeria && Galeria.length > 0) {
             req.body.Galeria = Galeria.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
+
+        if (Plano && Plano.length > 0) {
+            req.body.Plano = Plano.map((img, index) => ({
                 url: img.url,
                 alt: img.alt || "",
                 description: img.description || "",
@@ -102,7 +109,8 @@ router.put("/:id", async (req, res) => {
             Precio,
             Tamano_m2,
             DesarrolloId,
-            Galeria
+            Galeria,
+            Plano
         } = req.body;
 
         const precioNum = Number(Precio);
@@ -120,7 +128,6 @@ router.put("/:id", async (req, res) => {
 
             req.body.Resumen = desarrollo.Resumen;
             req.body.Descripcion = desarrollo.Descripcion;
-            req.body.Descripcion_Expandir = desarrollo.Descripcion_Expandir;
             req.body.Ciudad = desarrollo.Ciudad;
             req.body.Barrio = desarrollo.Barrio;
             req.body.Ubicacion = desarrollo.Ubicacion;
@@ -130,9 +137,17 @@ router.put("/:id", async (req, res) => {
         req.body.Tamano_m2 = tamanoNum;
         req.body.Precio_Con_Formato = precioNum.toLocaleString("es-ES");
 
-        // Validar galería
         if (Galeria && Galeria.length > 0) {
             req.body.Galeria = Galeria.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
+
+        if (Plano && Plano.length > 0) {
+            req.body.Plano = Plano.map((img, index) => ({
                 url: img.url,
                 alt: img.alt || "",
                 description: img.description || "",
