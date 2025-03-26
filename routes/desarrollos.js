@@ -55,92 +55,17 @@ router.get("/:id", async (req, res) => {
 });
 
 // ✅ POST crear nuevo desarrollo
-// ✅ POST: Crear desarrollo con imágenes
-router.post("/", upload.array("imagenes"), async (req, res) => {
+router.post("/", async (req, res) => {
     try {
-        const {
-            Proyecto_Nombre,
-            Precio,
-            Estado,
-            Resumen,
-            Descripcion,
-            Ciudad,
-            Barrio,
-            Ubicacion,
-            Email,
-            Celular,
-            Entrega,
-            Forma_de_Pago,
-            Gastos_Ocupacion,
-            Tipo,
-            Imagen_Principal_Url,
-        } = req.body;
+        console.log("📥 Payload recibido:", req.body);
 
-        // Validaciones básicas
-        if (
-            !Proyecto_Nombre ||
-            !Precio ||
-            !Estado ||
-            !Resumen ||
-            !Descripcion ||
-            !Ciudad ||
-            !Barrio ||
-            !Ubicacion
-        ) {
-            return res.status(400).json({ error: "Faltan campos obligatorios" });
-        }
-
-        // Subir imágenes a Cloudinary
-        const imagenesSubidas = await Promise.all(
-            req.files.map((file, index) => {
-                return new Promise((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                        {
-                            folder: "desarrollos",
-                        },
-                        (error, result) => {
-                            if (error) return reject(error);
-                            resolve({
-                                url: result.secure_url,
-                                position: index,
-                                alt: file.originalname,
-                            });
-                        }
-                    );
-                    streamifier.createReadStream(file.buffer).pipe(stream);
-                });
-            })
-        );
-
-        const imagenPrincipal =
-            Imagen_Principal_Url ||
-            (imagenesSubidas.length > 0 ? imagenesSubidas[0].url : null);
-
-        // Crear nuevo desarrollo
-        const nuevoDesarrollo = new Desarrollo({
-            Proyecto_Nombre,
-            Precio,
-            Estado,
-            Resumen,
-            Descripcion,
-            Ciudad,
-            Barrio,
-            Ubicacion,
-            Email,
-            Celular,
-            Entrega,
-            Forma_de_Pago,
-            Gastos_Ocupacion,
-            Tipo,
-            Galeria: imagenesSubidas,
-            Imagen: imagenPrincipal,
-        });
-
+        const nuevoDesarrollo = new Desarrollos(req.body);
         const saved = await nuevoDesarrollo.save();
+
         res.status(201).json(saved);
     } catch (err) {
         console.error("❌ Error al crear desarrollo:", err);
-        res.status(500).json({ error: "Error al crear desarrollo" });
+        res.status(500).json({ error: "Error al crear desarrollo", details: err.message });
     }
 });
 
