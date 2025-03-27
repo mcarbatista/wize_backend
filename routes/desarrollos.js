@@ -35,15 +35,20 @@ router.get("/", async (req, res) => {
 // ✅ GET desarrollo por ID + propiedades asociadas
 router.get("/:id", async (req, res) => {
     try {
-        console.error("Estoy buscando el desarrollo");
-
         const id = req.params.id;
 
+        // Validar ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "ID inválido" });
+        }
+
+        // Buscar desarrollo
         const desarrollo = await Desarrollos.findById(id);
         if (!desarrollo) {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
+        // Buscar propiedades asociadas
         const propiedades = await Propiedades.find({ DesarrolloId: id });
 
         res.json({ desarrollo, propiedades });
@@ -52,6 +57,7 @@ router.get("/:id", async (req, res) => {
         res.status(500).json({ error: "Error interno del servidor" });
     }
 });
+
 
 
 
