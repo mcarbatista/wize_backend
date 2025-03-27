@@ -62,6 +62,7 @@ router.post("/", async (req, res) => {
 
         req.body.Resumen = desarrollo.Resumen;
         req.body.Descripcion = desarrollo.Descripcion;
+        req.body.Descripcion_Expandir = desarrollo.Descripcion_Expandir;
         req.body.Ciudad = desarrollo.Ciudad;
         req.body.Barrio = desarrollo.Barrio;
         req.body.Ubicacion = desarrollo.Ubicacion;

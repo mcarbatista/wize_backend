@@ -12,7 +12,7 @@ const PropiedadesSchema = new mongoose.Schema({
     Precio: { type: Number, required: true },
     Precio_Con_Formato: String,
     Estado: { type: String },
-    Imagen: { type: [ImageSchema], default: [] },
+    Imagen: String,
     Galeria: { type: [ImageSchema], default: [] },
     Tipo: String,
     Entrega: String,
