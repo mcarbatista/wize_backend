@@ -1,15 +1,17 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose"); // ✅ IMPORT NECESARIO
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const streamifier = require("streamifier");
 const Desarrollos = require("../models/Desarrollos");
+const Propiedad = require("../models/Propiedades");
 
 // ✅ Multer setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// ✅ Cloudinary config (si no está centralizado)
+// ✅ Cloudinary config
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -21,7 +23,7 @@ router.get("/test", (req, res) => {
     res.send("✅ Ruta de desarrollos funciona");
 });
 
-// ✅ GET all desarrollos
+// ✅ GET todos los desarrollos
 router.get("/", async (req, res) => {
     try {
         const desarrollos = await Desarrollos.find({});
@@ -37,31 +39,25 @@ router.get("/:id", async (req, res) => {
     try {
         const id = req.params.id;
 
-        // Validar ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "ID inválido" });
         }
 
-        // Buscar desarrollo
         const desarrollo = await Desarrollos.findById(id);
         if (!desarrollo) {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
-        // Buscar propiedades asociadas
-        const propiedades = await Propiedades.find({ DesarrolloId: id });
+        const propiedades = await Propiedad.find({ DesarrolloId: id });
 
         res.json({ desarrollo, propiedades });
     } catch (err) {
-        console.error("❌ Error al obtener desarrollo:", err);
+        console.error("❌ Error al obtener desarrollo:", err.message, err.stack);
         res.status(500).json({ error: "Error interno del servidor" });
     }
 });
 
-
-
-
-// ✅ POST crear nuevo desarrollo
+// ✅ POST nuevo desarrollo
 router.post("/", async (req, res) => {
     try {
         console.log("📥 Payload recibido:", req.body);
@@ -71,12 +67,12 @@ router.post("/", async (req, res) => {
 
         res.status(201).json(saved);
     } catch (err) {
-        console.error("❌ Error al crear desarrollo:", err);
+        console.error("❌ Error al crear desarrollo:", err.message, err.stack);
         res.status(500).json({ error: "Error al crear desarrollo", details: err.message });
     }
 });
 
-// ✅ PUT actualizar desarrollo existente
+// ✅ PUT actualizar desarrollo
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -91,12 +87,12 @@ router.put("/:id", async (req, res) => {
         }
         res.json(actualizado);
     } catch (err) {
-        console.error("❌ Error al actualizar desarrollo:", err);
+        console.error("❌ Error al actualizar desarrollo:", err.message, err.stack);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ✅ DELETE eliminar desarrollo
+// ✅ DELETE desarrollo
 router.delete("/:id", async (req, res) => {
     const { id } = req.params;
 
@@ -111,49 +107,12 @@ router.delete("/:id", async (req, res) => {
         }
         res.json({ message: "Desarrollo eliminado correctamente" });
     } catch (err) {
-        console.error("❌ Error al eliminar desarrollo:", err);
+        console.error("❌ Error al eliminar desarrollo:", err.message, err.stack);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ✅ POST imagen de desarrollo
-// router.post("/:id/imagenes", upload.array("imagenes"), async (req, res) => {
-//     try {
-//         const desarrollo = await Desarrollos.findById(req.params.id);
-//         if (!desarrollo) return res.status(404).json({ error: "Desarrollo no encontrado" });
-
-//         const uploads = await Promise.all(
-//             req.files.map((file, index) => {
-//                 return new Promise((resolve, reject) => {
-//                     const stream = cloudinary.uploader.upload_stream(
-//                         { folder: "desarrollos" },
-//                         (error, result) => {
-//                             if (result) {
-//                                 resolve({
-//                                     url: result.secure_url,
-//                                     position: desarrollo.Galeria.length + index
-//                                 });
-//                             } else {
-//                                 reject(error);
-//                             }
-//                         }
-//                     );
-//                     streamifier.createReadStream(file.buffer).pipe(stream);
-//                 });
-//             })
-//         );
-
-//         desarrollo.Galeria.push(...uploads);
-//         await desarrollo.save();
-
-//         res.json({ success: true, galeria: desarrollo.Galeria });
-//     } catch (error) {
-//         console.error("❌ Error subiendo imágenes:", error);
-//         res.status(500).json({ error: "Error al subir imágenes" });
-//     }
-// });
-
-// ✅ PUT imagen principal de desarrollo
+// ✅ PUT setear imagen principal
 router.put("/:id/imagen-principal", async (req, res) => {
     const { url } = req.body;
 
@@ -165,10 +124,9 @@ router.put("/:id/imagen-principal", async (req, res) => {
         await desarrollo.save();
         res.json({ success: true, imagen: desarrollo.Imagen });
     } catch (err) {
-        console.error("❌ Error al setear imagen principal:", err);
+        console.error("❌ Error al setear imagen principal:", err.message, err.stack);
         res.status(500).json({ error: "No se pudo actualizar imagen principal" });
     }
 });
-
 
 module.exports = router;
