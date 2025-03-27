@@ -34,21 +34,26 @@ router.get("/", async (req, res) => {
 
 // ✅ GET desarrollo por ID + propiedades asociadas
 router.get("/:id", async (req, res) => {
-
     try {
-        console.error("Estoy buscado el desarrollo");
-        const desarrollo = await Desarrollos.findById(req.params.id).populate("DesarrolloId");
+        console.error("Estoy buscando el desarrollo");
+
+        const id = req.params.id;
+
+        const desarrollo = await Desarrollos.findById(id);
         if (!desarrollo) {
             return res.status(404).json({ error: "Desarrollo no encontrado" });
         }
 
         const propiedades = await Propiedades.find({ DesarrolloId: id });
+
         res.json({ desarrollo, propiedades });
     } catch (err) {
         console.error("❌ Error al obtener desarrollo:", err);
         res.status(500).json({ error: "Error interno del servidor" });
     }
 });
+
+
 
 // ✅ POST crear nuevo desarrollo
 router.post("/", async (req, res) => {
