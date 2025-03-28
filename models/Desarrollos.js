@@ -29,6 +29,7 @@ const DesarrollosSchema = new mongoose.Schema({
     Owner: String,
     Celular: String,
     Email: String,
+    Mapa: String,
     Created_Date: Date,
     Updated_Date: Date
 }, { timestamps: true, collection: "desarrollos" });
