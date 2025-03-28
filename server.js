@@ -6,10 +6,14 @@ const cors = require('cors');
 // Initialize Express app
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(cors({ origin: "http://localhost:3000" }));
-app.use(cors({ origin: "https://wize-frontend.vercel.app" }));
+// ALLOW MULTIPLE ORIGINS IN ONE CALL
+app.use(cors({
+    origin: [
+        "http://localhost:3000",
+        "https://wize-frontend.vercel.app"
+    ],
+    credentials: true
+}));
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -29,14 +33,13 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const uploadRoutes = require('./routes/upload');
 const authRoutes = require('./routes/auth');
 const propiedadesRoutes = require('./routes/propiedades');
-const usuariosRoutes = require('./routes/usuarios');
 const desarrollosRoutes = require('./routes/desarrollos');
 
+// Mount Routes
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/propiedades', propiedadesRoutes);
 app.use('/api/desarrollos', desarrollosRoutes);
-app.use('/api/usuarios', usuariosRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
