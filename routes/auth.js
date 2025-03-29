@@ -12,6 +12,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'somefallbacksecret';
 // Middleware: Verify token & check user is admin
 async function checkAdmin(req, res, next) {
     try {
+
+
         // Expect Authorization: Bearer <token>
         const authHeader = req.headers.authorization;
         if (!authHeader) {
@@ -50,7 +52,11 @@ async function checkAdmin(req, res, next) {
 router.post('/register', checkAdmin, async (req, res) => {
     try {
         let { nombre, email, password, phone, role } = req.body;
-        // Normalize the email (and trim spaces)
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Normalize inputs
         email = email.toLowerCase().trim();
         password = password.trim();
 
@@ -60,9 +66,10 @@ router.post('/register', checkAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Email already in use' });
         }
 
-        // Hash the password before saving
+        // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        console.log("Register - Hashed password:", hashedPassword);
 
         // Create and save the new user
         const newUser = new Usuarios({
@@ -86,23 +93,32 @@ router.post('/register', checkAdmin, async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         let { email, password } = req.body;
-        // Normalize the email (and trim password)
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Normalize inputs
         email = email.toLowerCase().trim();
         password = password.trim();
 
         // Find user
         const user = await Usuarios.findOne({ email });
         if (!user) {
+            console.log("Login - No user found for:", email);
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
+        // Debug: log stored hashed password
+        console.log("Login - Stored hash:", user.password);
+
         // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log("Login - Bcrypt compare result:", isMatch);
         if (!isMatch) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        // Generate a token
+        // Generate token
         const token = jwt.sign(
             { id: user._id, role: user.role },
             JWT_SECRET,
