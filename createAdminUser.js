@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
             name: 'Wize user test',
             email: 'caritobatista@gmail.com',
             password: hashedPassword,
-            role: 'agent',
+            role: 'agente',
         });
 
         await user.save();

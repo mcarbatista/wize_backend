@@ -1,29 +1,43 @@
+// routes/auth.js
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Usuarios = require('../models/Usuarios');
 
+// Use the same secret everywhere
 const JWT_SECRET = process.env.JWT_SECRET || 'somefallbacksecret';
 
-// Example checkAdmin middleware verifies JWT and that user is an admin
+// Middleware: Verify token & check user is admin
 async function checkAdmin(req, res, next) {
     try {
         // Expect Authorization: Bearer <token>
-        const token = req.headers.authorization?.split(' ')[1];
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1];
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback');
+        // Verify token with the same JWT_SECRET
+        const decoded = jwt.verify(token, JWT_SECRET);
+
+        // Check user existence in DB
         const user = await Usuarios.findById(decoded.id);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+
+        // Check user role
         if (user.role !== 'admin') {
             return res.status(403).json({ error: 'Only admins can create new users' });
         }
 
+        // Attach user to req for next middleware/route
         req.user = user;
         next();
     } catch (err) {
@@ -43,14 +57,23 @@ router.post('/register', checkAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Email already in use' });
         }
 
+        // Hash the password before saving
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
         // Create and save the new user
-        const newUser = new Usuarios({ nombre, email, password, role });
+        const newUser = new Usuarios({
+            nombre,
+            email,
+            password: hashedPassword,
+            role
+        });
         await newUser.save();
 
-        res.status(201).json({ message: 'User created successfully' });
+        return res.status(201).json({ message: 'User created successfully' });
     } catch (err) {
         console.error('Error in register:', err);
-        res.status(500).json({ error: 'Server error' });
+        return res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -75,11 +98,11 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user._id, role: user.role },
             JWT_SECRET,
-            { expiresIn: '7d' } // token valid for 1 day
+            { expiresIn: '7d' } // e.g., 7 days
         );
 
         // Return token + optional user info
-        res.json({
+        return res.json({
             message: 'Login successful',
             token,
             user: {
@@ -90,7 +113,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in login:', err);
-        res.status(500).json({ error: 'Server error' });
+        return res.status(500).json({ error: 'Server error' });
     }
 });
 
