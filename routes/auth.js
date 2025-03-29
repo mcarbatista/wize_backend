@@ -129,4 +129,47 @@ router.get('/usuarios', checkAdmin, async (req, res) => {
     }
 });
 
+// POST /api/auth/change-password
+router.post('/change-password', async (req, res) => {
+    try {
+        // Expect Authorization: Bearer <token>
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await Usuarios.findById(decoded.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password are required' });
+        }
+
+        // Validate the current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash the new password and update the user
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        user.password = hashedPassword;
+        await user.save();
+
+        return res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Error in change-password:', err);
+        return res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
