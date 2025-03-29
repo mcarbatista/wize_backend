@@ -4,6 +4,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Propiedad = require("../models/Propiedades");
 const Desarrollos = require("../models/Desarrollos");
+const { checkAuth, checkAdminRole } = require('../middleware/checkAuth');
 
 // ✅ GET todas las propiedades con info de desarrollo
 router.get("/", async (req, res) => {
@@ -38,7 +39,7 @@ router.get("/desarrollos/:id", async (req, res) => {
 });
 
 // ✅ POST: crear nueva propiedad
-router.post("/", async (req, res) => {
+router.post("/", checkAuth, checkAdminRole, async (req, res) => {
     try {
         const {
             Titulo, Precio, Dormitorios, Banos, Tamano_m2, DesarrolloId, Galeria, Plano
@@ -104,7 +105,7 @@ router.post("/", async (req, res) => {
 });
 
 // ✅ PUT: actualizar propiedad existente
-router.put("/:id", async (req, res) => {
+router.put("/:id", checkAuth, checkAdminRole, async (req, res) => {
     try {
         const {
             Precio,
@@ -167,7 +168,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // ✅ DELETE
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", checkAuth, checkAdminRole, async (req, res) => {
     try {
         const deleted = await Propiedad.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ error: "Propiedad no encontrada" });
