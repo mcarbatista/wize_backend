@@ -49,7 +49,7 @@ async function checkAdmin(req, res, next) {
 // POST /api/auth/register
 router.post('/register', checkAdmin, async (req, res) => {
     try {
-        const { nombre, email, password, role } = req.body;
+        const { nombre, email, password, phone, role } = req.body;
 
         // Check if user already exists
         const existingUser = await Usuarios.findOne({ email });
@@ -65,6 +65,7 @@ router.post('/register', checkAdmin, async (req, res) => {
         const newUser = new Usuarios({
             nombre,
             email,
+            phone,
             password: hashedPassword,
             role
         });
