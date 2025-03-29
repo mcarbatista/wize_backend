@@ -49,7 +49,10 @@ async function checkAdmin(req, res, next) {
 // POST /api/auth/register
 router.post('/register', checkAdmin, async (req, res) => {
     try {
-        const { nombre, email, password, phone, role } = req.body;
+        let { nombre, email, password, phone, role } = req.body;
+        // Normalize the email (and trim spaces)
+        email = email.toLowerCase().trim();
+        password = password.trim();
 
         // Check if user already exists
         const existingUser = await Usuarios.findOne({ email });
@@ -78,10 +81,14 @@ router.post('/register', checkAdmin, async (req, res) => {
     }
 });
 
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        let { email, password } = req.body;
+        // Normalize the email (and trim password)
+        email = email.toLowerCase().trim();
+        password = password.trim();
 
         // Find user
         const user = await Usuarios.findOne({ email });
@@ -99,10 +106,9 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user._id, role: user.role },
             JWT_SECRET,
-            { expiresIn: '7d' } // e.g., 7 days
+            { expiresIn: '7d' }
         );
 
-        // Return token + optional user info
         return res.json({
             message: 'Login successful',
             token,
@@ -118,6 +124,8 @@ router.post('/login', async (req, res) => {
     }
 });
 
+
+
 // GET /api/usuarios - Fetch all usuarios (protected; only admin)
 router.get('/usuarios', checkAdmin, async (req, res) => {
     try {
@@ -127,6 +135,13 @@ router.get('/usuarios', checkAdmin, async (req, res) => {
         console.error("Error fetching usuarios:", err);
         return res.status(500).json({ error: "Server error" });
     }
+});
+
+// GET /api/auth/logout
+router.get('/logout', (req, res) => {
+    // Since we're using JWT for authentication,
+    // logging out is handled on the client by removing the token.
+    return res.json({ message: 'Logout successful' });
 });
 
 // POST /api/auth/change-password
