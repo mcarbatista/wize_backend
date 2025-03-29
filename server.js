@@ -31,7 +31,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Import Routes
 const uploadRoutes = require('./routes/upload');
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/auth'); // This now includes GET /api/auth/usuarios
 const propiedadesRoutes = require('./routes/propiedades');
 const desarrollosRoutes = require('./routes/desarrollos');
 // const bootstrapAuthRoutes = require('./routes/bootstrapAuth');

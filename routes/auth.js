@@ -118,4 +118,15 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// GET /api/usuarios - Fetch all usuarios (protected; only admin)
+router.get('/usuarios', checkAdmin, async (req, res) => {
+    try {
+        const usuarios = await Usuarios.find({});
+        return res.json(usuarios);
+    } catch (err) {
+        console.error("Error fetching usuarios:", err);
+        return res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;
