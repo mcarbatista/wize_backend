@@ -6,6 +6,7 @@ const multer = require("multer");
 const streamifier = require("streamifier");
 const Desarrollos = require("../models/Desarrollos");
 const Propiedad = require("../models/Propiedades");
+const { checkAuth, checkAdminRole } = require('../middleware/checkAuth');
 
 // ✅ Multer setup
 const storage = multer.memoryStorage();
@@ -58,7 +59,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // ✅ POST nuevo desarrollo
-router.post("/", async (req, res) => {
+router.post("/", checkAuth, checkAdminRole, async (req, res) => {
     try {
         console.log("📥 Payload recibido:", req.body);
 
@@ -73,7 +74,7 @@ router.post("/", async (req, res) => {
 });
 
 // ✅ PUT actualizar desarrollo
-router.put("/:id", async (req, res) => {
+router.put("/:id", checkAuth, checkAdminRole, async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -93,7 +94,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // ✅ DELETE desarrollo
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", checkAuth, checkAdminRole, async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -113,7 +114,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // ✅ PUT setear imagen principal
-router.put("/:id/imagen-principal", async (req, res) => {
+router.put("/:id/imagen-principal", checkAuth, checkAdminRole, async (req, res) => {
     const { url } = req.body;
 
     try {

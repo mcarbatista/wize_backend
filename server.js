@@ -34,12 +34,16 @@ const uploadRoutes = require('./routes/upload');
 const authRoutes = require('./routes/auth');
 const propiedadesRoutes = require('./routes/propiedades');
 const desarrollosRoutes = require('./routes/desarrollos');
+// const bootstrapAuthRoutes = require('./routes/bootstrapAuth');
+const adminRouter = require("./routes/admin");
 
 // Mount Routes
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/propiedades', propiedadesRoutes);
 app.use('/api/desarrollos', desarrollosRoutes);
+// app.use('/api/auth', bootstrapAuthRoutes);
+app.use("/api/admin", adminRouter);
 
 // Root Route
 app.get('/', (req, res) => {
