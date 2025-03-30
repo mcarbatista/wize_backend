@@ -22,13 +22,10 @@ const DesarrollosSchema = new mongoose.Schema({
     Ubicacion: String,
     Tipo: String,
     Entrega: String,
-    Dormitorios: String,
     Pisos: String,
     Gastos_Ocupacion: String,
     Forma_de_Pago: String,
     Owner: String,
-    Celular: String,
-    Email: String,
     Mapa: String,
     Created_Date: Date,
     Updated_Date: Date
