@@ -13,6 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'somefallbacksecret';
 async function checkAdmin(req, res, next) {
     try {
 
+        const bcrypt = require('bcryptjs');
+        const testPassword = 'tomaswize2025';
+        const testHash = '$2b$08$Zsw2BEF2BDOs8w4KLCAmy.Bj/TSf24MXMucEfbymzlFuYDTqdu5.K';
+        bcrypt.compare(testPassword, testHash).then(console.log).catch(console.error);
 
         // Expect Authorization: Bearer <token>
         const authHeader = req.headers.authorization;
