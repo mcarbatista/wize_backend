@@ -57,6 +57,8 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                         }
                     );
                     streamifier.createReadStream(file.buffer).pipe(stream);
+                    console.log("File buffer exists:", Buffer.isBuffer(file.buffer), "Buffer length:", file.buffer.length);
+
                 });
             })
         );
