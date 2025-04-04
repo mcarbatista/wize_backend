@@ -15,12 +15,11 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// ✅ Upload images to Cloudinary and return structured info for Galeria
+// ✅ Upload images/videos to Cloudinary and return structured info for Galeria
 router.post('/', upload.array('imagenes', 20), async (req, res) => {
     try {
         const folderName = req.body.folderName || "generico";
-
-        // ✅ Flexible: permitir carpeta personalizada desde el frontend
+        // Allow custom folder from frontend
         const cloudinaryFolder = req.body.folder || `wize/desarrollos/fotos/${folderName}`;
 
         console.log("🛬 Archivos recibidos:", req.files);
@@ -29,8 +28,13 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
         const uploads = await Promise.all(
             req.files.map((file, index) => {
                 return new Promise((resolve, reject) => {
+                    // Detect resource type based on file mimetype:
+                    const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
                     const stream = cloudinary.uploader.upload_stream(
-                        { folder: cloudinaryFolder },
+                        {
+                            folder: cloudinaryFolder,
+                            resource_type: resourceType
+                        },
                         (error, result) => {
                             if (error) {
                                 console.error("❌ Cloudinary error:", error);
@@ -56,7 +60,6 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
         res.status(500).json({ success: false, error: 'Upload failed', details: error.message });
     }
 });
-
 
 // ✅ Delete image by Cloudinary public_id
 router.delete('/', async (req, res) => {
