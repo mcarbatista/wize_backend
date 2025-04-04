@@ -28,16 +28,14 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
         const uploads = await Promise.all(
             req.files.map((file, index) => {
                 return new Promise((resolve, reject) => {
-                    // Detect resource type based on file mimetype:
+                    // Determine the resource type based on file mimetype:
                     const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
 
-                    // For video files, add a transformation to output as mp4.
+                    // Set transformation: videos to mp4 and images to jpg.
                     const uploadOptions = {
                         folder: cloudinaryFolder,
                         resource_type: resourceType,
-                        ...(resourceType === "video" && {
-                            transformation: [{ format: "mp4" }]
-                        })
+                        transformation: [{ format: resourceType === "video" ? "mp4" : "jpg" }]
                     };
 
                     const stream = cloudinary.uploader.upload_stream(
@@ -58,7 +56,6 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                     );
                     streamifier.createReadStream(file.buffer).pipe(stream);
                     console.log("File buffer exists:", Buffer.isBuffer(file.buffer), "Buffer length:", file.buffer.length);
-
                 });
             })
         );
