@@ -30,11 +30,17 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                 return new Promise((resolve, reject) => {
                     // Detect resource type based on file mimetype:
                     const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
+
+                    // For video files, add a transformation to output as mp4.
+                    const uploadOptions = {
+                        folder: cloudinaryFolder,
+                        resource_type: resourceType,
+                        // If it's a video, force the output format to mp4.
+                        ...(resourceType === "video" && { transformation: [{ format: "mp4" }] })
+                    };
+
                     const stream = cloudinary.uploader.upload_stream(
-                        {
-                            folder: cloudinaryFolder,
-                            resource_type: resourceType
-                        },
+                        uploadOptions,
                         (error, result) => {
                             if (error) {
                                 console.error("❌ Cloudinary error:", error);
