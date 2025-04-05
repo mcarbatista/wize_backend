@@ -31,15 +31,22 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                     // Detect resource type based on file mimetype:
                     const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
 
-                    // Set the desired output format:
-                    const desiredFormat = resourceType === "video" ? "mp4" : "jpg";
-
-                    // Pass the format as a top-level parameter.
+                    // If it's an image, we convert to JPG synchronously.
+                    // If it's a video, we do an EAGER transformation to MP4 (asynchronously).
                     const uploadOptions = {
                         folder: cloudinaryFolder,
-                        resource_type: resourceType,
-                        format: desiredFormat
+                        resource_type: resourceType
                     };
+
+                    if (resourceType === "video") {
+                        // Provide an eager transformation array
+                        uploadOptions.eager = [{ format: "mp4" }];
+                        uploadOptions.eager_async = true;
+                        // optionally: uploadOptions.eager_notification_url = "https://yourapp.com/cloudinary-webhook";
+                    } else {
+                        // Force images to be JPG
+                        uploadOptions.format = "jpg";
+                    }
 
                     const stream = cloudinary.uploader.upload_stream(
                         uploadOptions,
@@ -48,20 +55,32 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                                 console.error("❌ Cloudinary error:", error);
                                 reject(error);
                             } else {
+                                // The result for large videos may not have the final .mp4
+                                // yet, because it's processed asynchronously. 
+                                // The 'secure_url' here is for the original uploaded file.
+                                // The MP4 version will be in result.eager (once processed).
                                 resolve({
                                     url: result.secure_url,
                                     alt: file.originalname || "",
                                     description: "",
-                                    position: index
+                                    position: index,
+                                    // If it's a video and you want the final MP4 URL,
+                                    // you can check result.eager after it's done:
+                                    eager: result.eager || []
                                 });
                             }
                         }
                     );
+
                     streamifier.createReadStream(file.buffer).pipe(stream);
                     console.log("File buffer exists:", Buffer.isBuffer(file.buffer), "Buffer length:", file.buffer.length);
                 });
             })
         );
+
+        // For large videos, the returned `url` is typically the original resource (like .mov).
+        // The final .mp4 version is created asynchronously. You can find it in `result.eager` 
+        // after the transformation finishes, or handle it via a notification URL.
 
         res.json({ success: true, galeria: uploads });
     } catch (error) {
