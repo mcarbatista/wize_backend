@@ -28,14 +28,17 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
         const uploads = await Promise.all(
             req.files.map((file, index) => {
                 return new Promise((resolve, reject) => {
-                    // Determine the resource type based on file mimetype:
+                    // Detect resource type based on file mimetype:
                     const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
 
-                    // Set transformation: videos to mp4 and images to jpg.
+                    // Set the desired output format:
+                    const desiredFormat = resourceType === "video" ? "mp4" : "jpg";
+
+                    // Pass the format as a top-level parameter.
                     const uploadOptions = {
                         folder: cloudinaryFolder,
                         resource_type: resourceType,
-                        transformation: [{ format: resourceType === "video" ? "mp4" : "jpg" }]
+                        format: desiredFormat
                     };
 
                     const stream = cloudinary.uploader.upload_stream(
