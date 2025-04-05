@@ -31,18 +31,16 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                     // Detect resource type based on file mimetype:
                     const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
 
-                    // If it's an image, we convert to JPG synchronously.
-                    // If it's a video, we do an EAGER transformation to MP4 (asynchronously).
                     const uploadOptions = {
                         folder: cloudinaryFolder,
                         resource_type: resourceType
                     };
 
                     if (resourceType === "video") {
-                        // Provide an eager transformation array
+                        // Force synchronous conversion to MP4 via eager transformation.
+                        // Removing eager_async ensures the transformation is processed before the response.
                         uploadOptions.eager = [{ format: "mp4" }];
-                        uploadOptions.eager_async = true;
-                        // optionally: uploadOptions.eager_notification_url = "https://yourapp.com/cloudinary-webhook";
+                        // Optionally, you could also set uploadOptions.format = "mp4";
                     } else {
                         // Force images to be JPG
                         uploadOptions.format = "jpg";
@@ -55,17 +53,16 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                                 console.error("❌ Cloudinary error:", error);
                                 reject(error);
                             } else {
-                                // The result for large videos may not have the final .mp4
-                                // yet, because it's processed asynchronously. 
-                                // The 'secure_url' here is for the original uploaded file.
-                                // The MP4 version will be in result.eager (once processed).
+                                // For videos, if the eager transformation is available, use it.
+                                const finalUrl = (result.eager && result.eager.length > 0)
+                                    ? result.eager[0].secure_url
+                                    : result.secure_url;
                                 resolve({
-                                    url: result.secure_url,
+                                    url: finalUrl,
                                     alt: file.originalname || "",
                                     description: "",
                                     position: index,
-                                    // If it's a video and you want the final MP4 URL,
-                                    // you can check result.eager after it's done:
+                                    // Return the eager results for additional info if needed.
                                     eager: result.eager || []
                                 });
                             }
@@ -77,10 +74,6 @@ router.post('/', upload.array('imagenes', 20), async (req, res) => {
                 });
             })
         );
-
-        // For large videos, the returned `url` is typically the original resource (like .mov).
-        // The final .mp4 version is created asynchronously. You can find it in `result.eager` 
-        // after the transformation finishes, or handle it via a notification URL.
 
         res.json({ success: true, galeria: uploads });
     } catch (error) {
