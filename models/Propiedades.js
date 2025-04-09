@@ -31,7 +31,7 @@ const PropiedadesSchema = new mongoose.Schema({
     DesarrolloId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Desarrollo",
-        required: true
+        default: null
     },
     Ciudad: { type: String, required: true },
     Barrio: { type: String, required: true },
