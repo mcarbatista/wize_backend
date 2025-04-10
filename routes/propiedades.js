@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
 // GET una propiedad por ID
 router.get("/:id", async (req, res) => {
     try {
-        const prop = await Propiedad.findById(req.params.id).populate("DesarrolloId");
+        const prop = await Propiedad.findById(req.params.id);
         if (!prop) return res.status(404).json({ error: "Propiedad no encontrada" });
         res.json(prop);
     } catch (err) {
