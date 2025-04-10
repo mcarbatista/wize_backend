@@ -8,7 +8,7 @@ const { checkAuth, checkAdminRole } = require('../middleware/checkAuth');
 // GET todas las propiedades
 router.get("/", async (req, res) => {
     try {
-        const propiedades = await Propiedad.find().populate("DesarrolloId");
+        const propiedades = await Propiedad.find();
         res.json(propiedades);
     } catch (error) {
         console.error("❌ Error al obtener propiedades:", error);
