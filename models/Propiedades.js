@@ -29,9 +29,9 @@ const PropiedadesSchema = new mongoose.Schema({
     Celular: String,
     Email: String,
     DesarrolloId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "Desarrollo",
-        default: null
+        default: ""
     },
     Ciudad: { type: String, required: true },
     Barrio: { type: String, required: true },
