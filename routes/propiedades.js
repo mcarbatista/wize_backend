@@ -181,11 +181,76 @@ router.post("/", checkAuth, checkAdminRole, async (req, res) => {
 
 // PUT, DELETE remain unchanged...
 router.put("/:id", checkAuth, checkAdminRole, async (req, res) => {
-    // ... your existing update logic ...
+    try {
+        const {
+            Precio,
+            Tamano_m2,
+            DesarrolloId,
+            Galeria,
+            Plano
+        } = req.body;
+
+        const precioNum = Number(Precio);
+        const tamanoNum = Number(Tamano_m2);
+
+        if (isNaN(precioNum) || isNaN(tamanoNum)) {
+            return res.status(400).json({ error: "Precio y Tamaño deben ser números válidos" });
+        }
+
+        if (DesarrolloId) {
+            const desarrollo = await Desarrollos.findById(DesarrolloId);
+            if (!desarrollo) {
+                return res.status(404).json({ error: "Desarrollo no encontrado" });
+            }
+
+            req.body.Resumen = desarrollo.Resumen;
+            req.body.Descripcion = desarrollo.Descripcion;
+            req.body.Ciudad = desarrollo.Ciudad;
+            req.body.Barrio = desarrollo.Barrio;
+            req.body.Ubicacion = desarrollo.Ubicacion;
+        }
+
+        req.body.Precio = precioNum;
+        req.body.Tamano_m2 = tamanoNum;
+        req.body.Precio_Con_Formato = precioNum.toLocaleString("es-ES");
+
+        if (Galeria && Galeria.length > 0) {
+            req.body.Galeria = Galeria.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
+
+        if (Plano && Plano.length > 0) {
+            req.body.Plano = Plano.map((img, index) => ({
+                url: img.url,
+                alt: img.alt || "",
+                description: img.description || "",
+                position: index,
+            }));
+        }
+
+        const updated = await Propiedad.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updated) return res.status(404).json({ error: "Propiedad no encontrada" });
+
+        res.json(updated);
+    } catch (err) {
+        console.error("❌ Error al actualizar propiedad:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
+
 router.delete("/:id", checkAuth, checkAdminRole, async (req, res) => {
-    // ... your existing delete logic ...
+    try {
+        const deleted = await Propiedad.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: "Propiedad no encontrada" });
+        res.json({ message: "Propiedad eliminada correctamente" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;
